@@ -6,46 +6,66 @@ open Fable.Helpers.React
 open Fable.Helpers.React.Props
 
 let [<Literal>] JSON_SAMPLE = """{
-    "foo": 5,
-    "bar": "bar",
-    "baz": [1,2,3]
-}"""
-
-let [<Literal>] JSON_SAMPLE2 = """{
-    "haha": 10
+    "widget": {
+        "debug": "on",
+        "window": {
+            "title": "Sample Konfabulator Widget",
+            "name": "main_window",
+            "width": 500,
+            "height": 500
+        },
+        "image": {
+            "src": "Images/Sun.png",
+            "name": "sun1",
+            "hOffset": 250,
+            "vOffset": 250,
+            "alignment": "center"
+        },
+        "text": {
+            "data": "Click Here",
+            "size": 36,
+            "style": "bold",
+            "name": "text1",
+            "foo": 250,
+            "vOffset": 100,
+            "alignment": "center",
+            "onMouseUp": "sun1.opacity = (sun1.opacity / 100) * 90;"
+        }
+    }
 }"""
 
 type MyJson = Fable.JsonProvider.Generator<JSON_SAMPLE>
-type MyJson2 = Fable.JsonProvider.Generator<JSON_SAMPLE2>
 
-let json = MyJson(JSON_SAMPLE)
-let json2 = MyJson2(JSON_SAMPLE2)
-
-// MODEL
-
-type Model = int
+type Model =
+  { Json: string; Parsed: MyJson }
 
 type Msg =
-| Increment
-| Decrement
+  | UpdateJson of string
 
-let init() : Model = 0
-
-// UPDATE
+let init() : Model =
+  let json = JSON_SAMPLE
+  { Json = json; Parsed = MyJson(json) }
 
 let update (msg:Msg) (model:Model) =
     match msg with
-    | Increment -> model + 1
-    | Decrement -> model - 1
-
-// VIEW (rendered with React)
+    | UpdateJson json ->
+      try
+        let parsed = MyJson json
+        { Json = json; Parsed = parsed }
+      with _ ->
+        { model with Json = json }    
 
 let view (model:Model) dispatch =
+  let par label txt =
+    p [] [strong [] [str (label + ": ")]; str txt]              
   div []
-      [ button [ OnClick (fun _ -> dispatch Increment) ] [ str "+" ]
-        div [] [ str (string model) ]
-        button [ OnClick (fun _ -> dispatch Decrement) ] [ str "-" ]
-        p [] [str <| sprintf "%.2f %s %.0f" json.foo json.bar json2.haha]  
+      [ par "Window Title" model.Parsed.widget.window.title
+        par "Image Source" model.Parsed.widget.image.src
+        par "Text Size" (sprintf "%.2f" model.Parsed.widget.text.foo)
+        textarea [OnChange (fun ev -> UpdateJson ev.Value |> dispatch)
+                  Style [Width "600px"; Height "600px"]
+                 ]
+                 [str model.Json]
       ]
 
 // App

@@ -20,18 +20,33 @@ module JsonProvider =
     [<Emit("$0[$1]")>]
     let getProp (o: obj) (k: string) = obj()
 
-    let rec makeMember (name, json) =
-        let getterCode (args: Expr list) =
-            <@@ getProp %%args.Head name @@>
+    let firstToUpper (s: string) =
+        s.[0..0].ToUpper() + s.[1..]
+
+    let getterCode name =
+        fun (args: Expr list) -> <@@ getProp %%args.Head name @@>
+
+    let rec makeType typeName json =
         match json with
-        | JsonParser.Null -> None // Ignore
-        | JsonParser.Bool _ -> Property(name, Bool, false, getterCode) |> Some
-        | JsonParser.Number _ -> Property(name, Float, false, getterCode) |> Some
-        | JsonParser.String _ -> Property(name, String, false, getterCode) |> Some
-        // TODO: Check if all items have same type
-        | JsonParser.Array _ -> Property(name, Array Any, false, getterCode) |> Some
-        // TODO
-        | JsonParser.Object _ -> None
+        | JsonParser.Null -> Any
+        | JsonParser.Bool _ -> Bool
+        | JsonParser.Number _ -> Float
+        | JsonParser.String _ -> String
+        | JsonParser.Array items ->
+            match items with
+            | [] -> Array Any
+            // TODO: Check if all items have same type
+            | item::_ -> makeType typeName item |> Array
+        | JsonParser.Object members ->
+            let members = members |> List.collect (makeMember typeName)
+            makeCustomType(typeName, members) |> Custom
+
+    and makeMember ns (name, json) =
+        let t = makeType (firstToUpper name) json
+        let m = Property(name, t, false, getterCode name)
+        match t with
+        | Custom t -> [ChildType t; m]
+        | _ -> [m]
 
     [<TypeProvider>]
     type public JsonProvider (config : TypeProviderConfig) as this =
@@ -50,7 +65,7 @@ module JsonProvider =
                         match JsonParser.parse sample with
                         | Some(JsonParser.Object members) ->
                             makeRootType(asm, ns, typeName, [
-                                yield! members |> List.choose makeMember
+                                yield! members |> List.collect (makeMember "")
                                 yield Constructor(["json", String], fun args -> <@@ jsonParse %%args.Head @@>)
                             ])
                         | _ -> failwith "Sample is not a valid JSON object"

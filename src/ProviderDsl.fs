@@ -5,7 +5,7 @@ open FSharp.Quotations
 open ProviderImplementation.ProvidedTypes
 
 type Member =
-    | Type of ErasedType
+    | ChildType of System.Type
     | Property of name: string * typ: ErasedType * isStatic: bool * body: (Expr list -> Expr)
     | Method of name: string * args: (string * ErasedType) list * typ: ErasedType * isStatic: bool * body: (Expr list -> Expr)
     | Constructor of args: (string * ErasedType) list * body: (Expr list -> Expr)
@@ -18,14 +18,14 @@ type ErasedType =
     | String
     | Array of ErasedType
     | Option of ErasedType
-    | Custom of name: string * Member list 
+    | Custom of System.Type
 
 let addMembers (t: ProvidedTypeDefinition) members =
     for memb in members do
         let memb: MemberInfo =
             match memb with
-            | Type t ->
-                upcast makeType t
+            | ChildType t ->
+                upcast t
             | Property(name, typ, isStatic, body) ->
                 upcast ProvidedProperty(name, makeType typ, isStatic = isStatic, getterCode = body)
             | Method(name, args, typ, isStatic, body) ->
@@ -44,9 +44,9 @@ let makeType = function
     | String -> typeof<string>
     | Array t -> (makeType t).MakeArrayType()
     | Option t -> typedefof<Option<obj>>.MakeGenericType(makeType t)
-    | Custom(name, members) -> makeCustomType(name, members)
+    | Custom t -> t
 
-let makeCustomType(name: string, members: Member list) =
+let makeCustomType(name: string, members: Member list): System.Type =
     let t = ProvidedTypeDefinition(name, baseType = Some typeof<obj>, hideObjectMethods = true, isErased = true)
     addMembers t members
     upcast t
