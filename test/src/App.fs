@@ -6,7 +6,7 @@ open Fable.React
 open Fable.React.Props
 open Fable.SimpleHttp
 
-let [<Literal>] REMOTE_JSON_URL = "https://jsonplaceholder.typicode.com/todos/10"
+let [<Literal>] REMOTE_JSON_URL = "https://jsonplaceholder.typicode.com/todos"
 
 let [<Literal>] LOCAL_JSON_SAMPLE = """{
     "widget": {
@@ -41,21 +41,28 @@ type LocalJson = Fable.JsonProvider.Generator<LOCAL_JSON_SAMPLE>
 type RemoteJson = Fable.JsonProvider.Generator<REMOTE_JSON_URL>
 
 type Model =
-  { LocalJson: string; ParsedLocalJson: LocalJson; RemoteJson: RemoteJson option }
+  { LocalJson: string
+    ParsedLocalJson: LocalJson
+    RemoteJson: RemoteJson[] option
+    SelectedIndex: int }
 
 type Msg =
   | LocalJsonUpdated of string
-  | RemoteJsonLoaded of RemoteJson option
+  | RemoteJsonLoaded of RemoteJson[] option
+  | IndexUpdated of int
 
 let download url = async {
     let! (_, res) = Http.get url
-    return RemoteJson res
+    return RemoteJson.ParseArray res
 }
 
 let init() : Model * Cmd<Msg> =
   let json = LOCAL_JSON_SAMPLE
   let cmd = Cmd.OfAsync.either download REMOTE_JSON_URL (Some >> RemoteJsonLoaded) (fun _ -> RemoteJsonLoaded None)
-  { LocalJson = json; ParsedLocalJson = LocalJson(json); RemoteJson = None }, cmd
+  { LocalJson = json
+    ParsedLocalJson = LocalJson(json)
+    RemoteJson = None
+    SelectedIndex = 0 }, cmd
 
 let update (msg:Msg) (model:Model) =
     match msg with
@@ -67,6 +74,8 @@ let update (msg:Msg) (model:Model) =
             { model with LocalJson = json }, Cmd.none
     | RemoteJsonLoaded json ->
         { model with RemoteJson = json }, Cmd.none
+    | IndexUpdated i ->
+        { model with SelectedIndex = i }, Cmd.none
 
 let view (model:Model) dispatch =
   let par label txt =
@@ -76,11 +85,17 @@ let view (model:Model) dispatch =
           [ yield h2 [] [str "Remote JSON"]
             match model.RemoteJson with
             | None -> ()
-            | Some json ->
-                yield par "Id" (string json.id)
-                yield par "UserId" (string json.userId)
-                yield par "Title" json.title
-                yield par "Completed" (string json.completed)
+            | Some todos ->
+                let todo = todos.[model.SelectedIndex]
+                yield select
+                        [Value model.SelectedIndex
+                         OnChange (fun ev -> int ev.Value |> IndexUpdated |> dispatch)]
+                        [for i = 0 to todos.Length - 1 do
+                            yield option [Value i] [str (string i)]]
+                yield par "Id" (string todo.id)
+                yield par "UserId" (string todo.userId)
+                yield par "Title" todo.title
+                yield par "Completed" (string todo.completed)
           ]
       div []
           [ h2 [] [str "Local JSON"]

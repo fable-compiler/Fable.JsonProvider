@@ -51,12 +51,21 @@ module JsonProvider =
         | _ -> [m]
 
     let parseJson asm ns typeName sample =
+        let makeRootType withCons basicMembers =
+            makeRootType(asm, ns, typeName, [
+                yield! basicMembers |> List.collect (makeMember "")
+                if withCons then
+                    yield Constructor(["json", String], fun args -> <@@ jsonParse %%args.Head @@>)
+            ])
         match JsonParser.parse sample with
         | Some(JsonParser.Object members) ->
-            makeRootType(asm, ns, typeName, [
-                yield! members |> List.collect (makeMember "")
-                yield Constructor(["json", String], fun args -> <@@ jsonParse %%args.Head @@>)
-            ]) |> Some
+            makeRootType true members |> Some
+        | Some(JsonParser.Array((JsonParser.Object members)::_)) ->
+            let t = makeRootType false members
+            let array = t.MakeArrayType() |> Custom
+            [Method("ParseArray", ["json", String], array, true, fun args -> <@@ jsonParse %%args.Head @@>)]
+            |> addMembers t
+            Some t
         | _ -> None
 
     [<TypeProvider>]
@@ -70,7 +79,7 @@ module JsonProvider =
 
         do generator.DefineStaticParameters(
             parameters = staticParams,
-            instantiationFunction =  (fun typeName pVals ->
+            instantiationFunction = (fun typeName pVals ->
                     match pVals with
                     | [| :? string as arg|] ->
                         if Regex.IsMatch(arg, "^https?://") then
