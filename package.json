@@ -5,8 +5,8 @@
     "publish": "fable build.fsx --run publish"
   },
   "dependencies": {
-    "@babel/core": "^7.3.3",
-    "fable-compiler-js": "^1.0.0-beta-002",
+    "@babel/core": "^7.4.4",
+    "fable-compiler-js": "^1.0.3",
     "fable-publish-utils": "^1.0.5"
   }
 }

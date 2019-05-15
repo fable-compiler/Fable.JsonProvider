@@ -2,10 +2,13 @@ module App
 
 open Elmish
 open Elmish.React
-open Fable.Helpers.React
-open Fable.Helpers.React.Props
+open Fable.React
+open Fable.React.Props
+open Fable.SimpleHttp
 
-let [<Literal>] JSON_SAMPLE = """{
+let [<Literal>] REMOTE_JSON_URL = "https://jsonplaceholder.typicode.com/todos/10"
+
+let [<Literal>] LOCAL_JSON_SAMPLE = """{
     "widget": {
         "debug": "on",
         "window": {
@@ -34,42 +37,64 @@ let [<Literal>] JSON_SAMPLE = """{
     }
 }"""
 
-type MyJson = Fable.JsonProvider.Generator<JSON_SAMPLE>
+type LocalJson = Fable.JsonProvider.Generator<LOCAL_JSON_SAMPLE>
+type RemoteJson = Fable.JsonProvider.Generator<REMOTE_JSON_URL>
 
 type Model =
-  { Json: string; Parsed: MyJson }
+  { LocalJson: string; ParsedLocalJson: LocalJson; RemoteJson: RemoteJson option }
 
 type Msg =
-  | UpdateJson of string
+  | LocalJsonUpdated of string
+  | RemoteJsonLoaded of RemoteJson option
 
-let init() : Model =
-  let json = JSON_SAMPLE
-  { Json = json; Parsed = MyJson(json) }
+let download url = async {
+    let! (_, res) = Http.get url
+    return RemoteJson res
+}
+
+let init() : Model * Cmd<Msg> =
+  let json = LOCAL_JSON_SAMPLE
+  let cmd = Cmd.OfAsync.either download REMOTE_JSON_URL (Some >> RemoteJsonLoaded) (fun _ -> RemoteJsonLoaded None)
+  { LocalJson = json; ParsedLocalJson = LocalJson(json); RemoteJson = None }, cmd
 
 let update (msg:Msg) (model:Model) =
     match msg with
-    | UpdateJson json ->
-      try
-        let parsed = MyJson json
-        { Json = json; Parsed = parsed }
-      with _ ->
-        { model with Json = json }    
+    | LocalJsonUpdated json ->
+        try
+            let parsed = LocalJson json
+            { model with LocalJson = json; ParsedLocalJson = parsed }, Cmd.none
+        with _ ->
+            { model with LocalJson = json }, Cmd.none
+    | RemoteJsonLoaded json ->
+        { model with RemoteJson = json }, Cmd.none
 
 let view (model:Model) dispatch =
   let par label txt =
-    p [] [strong [] [str (label + ": ")]; str txt]              
-  div []
-      [ par "Window Title" model.Parsed.widget.window.title
-        par "Image Source" model.Parsed.widget.image.src
-        par "Text Size" (sprintf "%.2f" model.Parsed.widget.text.foo)
-        textarea [OnChange (fun ev -> UpdateJson ev.Value |> dispatch)
-                  Style [Width "600px"; Height "600px"]
-                 ]
-                 [str model.Json]
-      ]
+    p [] [strong [] [str (label + ": ")]; str txt]
+  div [] [
+      div []
+          [ yield h2 [] [str "Remote JSON"]
+            match model.RemoteJson with
+            | None -> ()
+            | Some json ->
+                yield par "Id" (string json.id)
+                yield par "UserId" (string json.userId)
+                yield par "Title" json.title
+                yield par "Completed" (string json.completed)
+          ]
+      div []
+          [ h2 [] [str "Local JSON"]
+            par "Window Title" model.ParsedLocalJson.widget.window.title
+            par "Image Source" model.ParsedLocalJson.widget.image.src
+            par "Text Size" (sprintf "%.2f" model.ParsedLocalJson.widget.text.foo)
+            textarea [OnChange (fun ev -> LocalJsonUpdated ev.Value |> dispatch)
+                      Style [Width "600px"; Height "600px"]
+                     ]
+                     [str model.LocalJson] ]
+  ]
 
 // App
-Program.mkSimple init update view
-|> Program.withReact "elmish-app"
+Program.mkProgram init update view
+|> Program.withReactSynchronous "elmish-app"
 |> Program.withConsoleTrace
 |> Program.run

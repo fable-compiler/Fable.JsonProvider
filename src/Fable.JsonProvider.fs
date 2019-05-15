@@ -7,12 +7,14 @@ namespace Fable
 
 module JsonProvider =
 
+    open System.Text.RegularExpressions
     open FSharp.Quotations
     open FSharp.Core.CompilerServices
     open ProviderImplementation.ProvidedTypes
 
     open ProviderDsl
     open Fable.Core
+    open Fable.SimpleHttp
 
     [<Emit("JSON.parse($0)")>]
     let jsonParse (json: string) = obj()
@@ -48,6 +50,15 @@ module JsonProvider =
         | Custom t -> [ChildType t; m]
         | _ -> [m]
 
+    let parseJson asm ns typeName sample =
+        match JsonParser.parse sample with
+        | Some(JsonParser.Object members) ->
+            makeRootType(asm, ns, typeName, [
+                yield! members |> List.collect (makeMember "")
+                yield Constructor(["json", String], fun args -> <@@ jsonParse %%args.Head @@>)
+            ]) |> Some
+        | _ -> None
+
     [<TypeProvider>]
     type public JsonProvider (config : TypeProviderConfig) as this =
         inherit TypeProviderForNamespaces (config)
@@ -60,16 +71,23 @@ module JsonProvider =
         do generator.DefineStaticParameters(
             parameters = staticParams,
             instantiationFunction =  (fun typeName pVals ->
-                    match pVals with 
-                    | [| :? string as sample|] ->
-                        match JsonParser.parse sample with
-                        | Some(JsonParser.Object members) ->
-                            makeRootType(asm, ns, typeName, [
-                                yield! members |> List.collect (makeMember "")
-                                yield Constructor(["json", String], fun args -> <@@ jsonParse %%args.Head @@>)
-                            ])
-                        | _ -> failwith "Sample is not a valid JSON object"
-                    | _ -> failwith "unexpected parameter values"                
+                    match pVals with
+                    | [| :? string as arg|] ->
+                        if Regex.IsMatch(arg, "^https?://") then
+                            async {
+                                let! (status, res) = Http.get arg
+                                if status <> 200 then
+                                    return failwithf "URL %s returned %i status code" arg status
+                                return
+                                    match parseJson asm ns typeName res with
+                                    | Some t -> t
+                                    | None -> failwithf "Response from URL %s is not a valid JSON: %s" arg res
+                            } |> Async.RunSynchronously
+                        else
+                            match parseJson asm ns typeName arg with
+                            | Some t -> t
+                            | None -> failwithf "Local sample is not a valid JSON"
+                    | _ -> failwith "unexpected parameter values"
                 )
             )
 
