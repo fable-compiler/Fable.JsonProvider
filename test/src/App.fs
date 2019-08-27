@@ -39,10 +39,12 @@ let [<Literal>] LOCAL_JSON_SAMPLE = """{
 
 type LocalJson = Fable.JsonProvider.Generator<LOCAL_JSON_SAMPLE>
 type RemoteJson = Fable.JsonProvider.Generator<REMOTE_JSON_URL>
+type FileRefJson = Fable.JsonProvider.Generator<"./test.json">
 
 type Model =
   { LocalJson: string
     ParsedLocalJson: LocalJson
+    ParsedLocalFileRefJson: FileRefJson
     RemoteJson: RemoteJson[] option
     SelectedIndex: int }
 
@@ -61,6 +63,7 @@ let init() : Model * Cmd<Msg> =
   let cmd = Cmd.OfAsync.either download REMOTE_JSON_URL (Some >> RemoteJsonLoaded) (fun _ -> RemoteJsonLoaded None)
   { LocalJson = json
     ParsedLocalJson = LocalJson(json)
+    ParsedLocalFileRefJson = FileRefJson(json)
     RemoteJson = None
     SelectedIndex = 0 }, cmd
 
@@ -96,6 +99,12 @@ let view (model:Model) dispatch =
                 yield par "UserId" (string todo.userId)
                 yield par "Title" todo.title
                 yield par "Completed" (string todo.completed)
+          ]
+      div []
+          [ h2 [] [str "File ref Local JSON"]
+            par "Window Title" model.ParsedLocalFileRefJson.widget.window.title
+            par "Image Source" model.ParsedLocalFileRefJson.widget.image.src
+            par "Text Size" (sprintf "%.2f" model.ParsedLocalFileRefJson.widget.text.foo)
           ]
       div []
           [ h2 [] [str "Local JSON"]

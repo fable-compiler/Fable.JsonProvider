@@ -93,7 +93,18 @@ module JsonProvider =
                                     | None -> failwithf "Response from URL %s is not a valid JSON: %s" arg res
                             } |> Async.RunSynchronously
                         else
-                            match parseJson asm ns typeName arg with
+                            let content =
+                                if arg.StartsWith("{") then arg
+                                else
+                                    let filepath =
+                                        if System.IO.Path.IsPathRooted arg then
+                                            arg
+                                        else
+                                            System.IO.Path.GetFullPath(System.IO.Path.Combine(config.ResolutionFolder, arg))
+
+                                    System.IO.File.ReadAllText(filepath,System.Text.Encoding.UTF8)
+
+                            match parseJson asm ns typeName content with
                             | Some t -> t
                             | None -> failwithf "Local sample is not a valid JSON"
                     | _ -> failwith "unexpected parameter values"
