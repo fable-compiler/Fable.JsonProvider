@@ -94,7 +94,7 @@ module JsonProvider =
                             } |> Async.RunSynchronously
                         else
                             let content =
-                                if arg.StartsWith("{") then arg
+                                if arg.StartsWith("{") || arg.StartsWith("[") then arg
                                 else
                                     let filepath =
                                         if System.IO.Path.IsPathRooted arg then
