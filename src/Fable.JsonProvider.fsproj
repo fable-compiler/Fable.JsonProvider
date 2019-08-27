@@ -13,6 +13,6 @@
     <Compile Include="Fable.JsonProvider.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Fable.SimpleHttp" Version="2.1.0" />
+    <PackageReference Include="Fable.SimpleHttp" Version="2.5.0" />
   </ItemGroup>
 </Project>

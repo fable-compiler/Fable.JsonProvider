@@ -8,8 +8,8 @@
   <ItemGroup>
     <PackageReference Include="Fable.Core" Version="3.0.0" />
     <PackageReference Include="Fable.Elmish.React" Version="3.0.1" />
-    <PackageReference Include="Fable.SimpleHttp" Version="2.1.0" />
-    <PackageReference Include="Fable.JsonProvider" Version="1.0.0-beta-004" />
-    <!-- <Reference Include="../../src/bin/Debug/netstandard2.0/publish/Fable.JsonProvider.dll" /> -->
+    <PackageReference Include="Fable.SimpleHttp" Version="2.5.0" />
+    <!-- <PackageReference Include="Fable.JsonProvider" Version="1.0.0-beta-004" /> -->
+    <Reference Include="../../src/bin/Debug/netstandard2.0/publish/Fable.JsonProvider.dll" />
   </ItemGroup>
 </Project>
