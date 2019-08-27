@@ -1,3 +1,7 @@
+### 1.0.0
+
+* Support file paths @Titaye
+
 ### 1.0.0-beta-004
 
 * Accept array as root JSON

@@ -3,16 +3,17 @@
 // https://github.com/fable-compiler/webpack-config-template
 
 var path = require("path");
+var publicDir = path.join(__dirname, "./public");
 
 module.exports = {
     mode: "development",
-    entry: "./src/App.fsproj",
+    entry: path.join(__dirname, "./src/App.fsproj"),
     output: {
-        path: path.join(__dirname, "./public"),
+        path: publicDir,
         filename: "bundle.js",
     },
     devServer: {
-        contentBase: "./public",
+        contentBase: publicDir,
         port: 8080,
     },
     module: {

@@ -6,9 +6,10 @@ open Fable.React
 open Fable.React.Props
 open Fable.SimpleHttp
 
-let [<Literal>] REMOTE_JSON_URL = "https://jsonplaceholder.typicode.com/todos"
-
-let [<Literal>] LOCAL_JSON_SAMPLE = """{
+let [<Literal>] FILE_JSON = "test.json"
+let [<Literal>] FILE_JSON_PATH = "../public/" + FILE_JSON
+let [<Literal>] REMOTE_JSON = "https://jsonplaceholder.typicode.com/todos"
+let [<Literal>] LITERAL_JSON = """{
     "widget": {
         "debug": "on",
         "window": {
@@ -37,46 +38,54 @@ let [<Literal>] LOCAL_JSON_SAMPLE = """{
     }
 }"""
 
-type LocalJson = Fable.JsonProvider.Generator<LOCAL_JSON_SAMPLE>
-type RemoteJson = Fable.JsonProvider.Generator<REMOTE_JSON_URL>
-type FileRefJson = Fable.JsonProvider.Generator<"./test.json">
+type LiteralJson = Fable.JsonProvider.Generator<LITERAL_JSON>
+type FileJson = Fable.JsonProvider.Generator<FILE_JSON_PATH>
+type RemoteJson = Fable.JsonProvider.Generator<REMOTE_JSON>
 
 type Model =
-  { LocalJson: string
-    ParsedLocalJson: LocalJson
-    ParsedLocalFileRefJson: FileRefJson
-    RemoteJson: RemoteJson[] option
+  { LiteralJson: string
+    ParsedLiteralJson: LiteralJson
+    ParsedFileJson: FileJson option
+    ParsedRemoteJson: RemoteJson[] option
     SelectedIndex: int }
 
 type Msg =
-  | LocalJsonUpdated of string
-  | RemoteJsonLoaded of RemoteJson[] option
+  | LiteralJsonUpdated of string
+  | FileJsonLoaded of string option
+  | RemoteJsonLoaded of string option
   | IndexUpdated of int
 
 let download url = async {
     let! (_, res) = Http.get url
-    return RemoteJson.ParseArray res
+    return res
 }
 
 let init() : Model * Cmd<Msg> =
-  let json = LOCAL_JSON_SAMPLE
-  let cmd = Cmd.OfAsync.either download REMOTE_JSON_URL (Some >> RemoteJsonLoaded) (fun _ -> RemoteJsonLoaded None)
-  { LocalJson = json
-    ParsedLocalJson = LocalJson(json)
-    ParsedLocalFileRefJson = FileRefJson(json)
-    RemoteJson = None
-    SelectedIndex = 0 }, cmd
+  let json = LITERAL_JSON
+  let cmd1 = Cmd.OfAsync.either download FILE_JSON
+                (Some >> FileJsonLoaded)
+                (fun _ -> FileJsonLoaded None)
+  let cmd2 = Cmd.OfAsync.either download REMOTE_JSON
+                (Some >> RemoteJsonLoaded)
+                (fun _ -> RemoteJsonLoaded None)
+  { LiteralJson = json
+    ParsedLiteralJson = LiteralJson(json)
+    ParsedFileJson = None
+    ParsedRemoteJson = None
+    SelectedIndex = 0 }, Cmd.batch [cmd1; cmd2]
 
 let update (msg:Msg) (model:Model) =
     match msg with
-    | LocalJsonUpdated json ->
+    | LiteralJsonUpdated json ->
         try
-            let parsed = LocalJson json
-            { model with LocalJson = json; ParsedLocalJson = parsed }, Cmd.none
+            let parsed = LiteralJson json
+            { model with LiteralJson = json; ParsedLiteralJson = parsed }, Cmd.none
         with _ ->
-            { model with LocalJson = json }, Cmd.none
+            { model with LiteralJson = json }, Cmd.none
+    | FileJsonLoaded json ->
+        { model with ParsedFileJson = Option.map FileJson json }, Cmd.none
     | RemoteJsonLoaded json ->
-        { model with RemoteJson = json }, Cmd.none
+        { model with ParsedRemoteJson = Option.map RemoteJson.ParseArray json }, Cmd.none
     | IndexUpdated i ->
         { model with SelectedIndex = i }, Cmd.none
 
@@ -86,7 +95,7 @@ let view (model:Model) dispatch =
   div [] [
       div []
           [ yield h2 [] [str "Remote JSON"]
-            match model.RemoteJson with
+            match model.ParsedRemoteJson with
             | None -> ()
             | Some todos ->
                 let todo = todos.[model.SelectedIndex]
@@ -101,20 +110,23 @@ let view (model:Model) dispatch =
                 yield par "Completed" (string todo.completed)
           ]
       div []
-          [ h2 [] [str "File ref Local JSON"]
-            par "Window Title" model.ParsedLocalFileRefJson.widget.window.title
-            par "Image Source" model.ParsedLocalFileRefJson.widget.image.src
-            par "Text Size" (sprintf "%.2f" model.ParsedLocalFileRefJson.widget.text.foo)
+          [ yield h2 [] [str "File JSON"]
+            match model.ParsedFileJson with
+            | None -> ()
+            | Some json ->
+                yield par "Title" json.glossary.title
+                yield par "Glossary Term" json.glossary.GlossDiv.GlossList.GlossEntry.GlossTerm
+                yield par "ISO" json.glossary.GlossDiv.GlossList.GlossEntry.Abbrev
           ]
       div []
-          [ h2 [] [str "Local JSON"]
-            par "Window Title" model.ParsedLocalJson.widget.window.title
-            par "Image Source" model.ParsedLocalJson.widget.image.src
-            par "Text Size" (sprintf "%.2f" model.ParsedLocalJson.widget.text.foo)
-            textarea [OnChange (fun ev -> LocalJsonUpdated ev.Value |> dispatch)
+          [ h2 [] [str "Literal JSON"]
+            par "Window Title" model.ParsedLiteralJson.widget.window.title
+            par "Image Source" model.ParsedLiteralJson.widget.image.src
+            par "Text Size" (sprintf "%.2f" model.ParsedLiteralJson.widget.text.foo)
+            textarea [OnChange (fun ev -> LiteralJsonUpdated ev.Value |> dispatch)
                       Style [Width "600px"; Height "600px"]
-                     ]
-                     [str model.LocalJson] ]
+                      Value model.LiteralJson] []
+          ]
   ]
 
 // App

@@ -7,6 +7,9 @@ namespace Fable
 
 module JsonProvider =
 
+    open System
+    open System.IO
+    open System.Net
     open System.Text.RegularExpressions
     open FSharp.Quotations
     open FSharp.Core.CompilerServices
@@ -14,13 +17,22 @@ module JsonProvider =
 
     open ProviderDsl
     open Fable.Core
-    open Fable.SimpleHttp
 
     [<Emit("JSON.parse($0)")>]
     let jsonParse (json: string) = obj()
 
     [<Emit("$0[$1]")>]
     let getProp (o: obj) (k: string) = obj()
+
+    let fetchUrlAsync (url: string) =        
+        async {                             
+            let req = WebRequest.CreateHttp(url)
+            req.AutomaticDecompression <- DecompressionMethods.GZip ||| DecompressionMethods.Deflate
+            use! resp = req.AsyncGetResponse()
+            use stream = resp.GetResponseStream() 
+            use reader = new IO.StreamReader(stream) 
+            return reader.ReadToEnd() 
+        }
 
     let firstToUpper (s: string) =
         s.[0..0].ToUpper() + s.[1..]
@@ -82,11 +94,10 @@ module JsonProvider =
             instantiationFunction = (fun typeName pVals ->
                     match pVals with
                     | [| :? string as arg|] ->
+                        let arg = arg.Trim()
                         if Regex.IsMatch(arg, "^https?://") then
                             async {
-                                let! (status, res) = Http.get arg
-                                if status <> 200 then
-                                    return failwithf "URL %s returned %i status code" arg status
+                                let! res = fetchUrlAsync arg
                                 return
                                     match parseJson asm ns typeName res with
                                     | Some t -> t
@@ -94,15 +105,14 @@ module JsonProvider =
                             } |> Async.RunSynchronously
                         else
                             let content =
+                                // Check if the string is a JSON literal
                                 if arg.StartsWith("{") || arg.StartsWith("[") then arg
                                 else
                                     let filepath =
-                                        if System.IO.Path.IsPathRooted arg then
-                                            arg
+                                        if Path.IsPathRooted arg then arg
                                         else
-                                            System.IO.Path.GetFullPath(System.IO.Path.Combine(config.ResolutionFolder, arg))
-
-                                    System.IO.File.ReadAllText(filepath,System.Text.Encoding.UTF8)
+                                            Path.GetFullPath(Path.Combine(config.ResolutionFolder, arg))
+                                    File.ReadAllText(filepath,System.Text.Encoding.UTF8)
 
                             match parseJson asm ns typeName content with
                             | Some t -> t
