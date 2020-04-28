@@ -27,10 +27,9 @@ let [<Literal>] LITERAL_JSON = """{
         },
         "text": {
             "data": "Click Here",
-            "size": 36,
+            "size": [{ "width": 36, "height": 40 }],
             "style": "bold",
             "name": "text1",
-            "foo": 250,
             "vOffset": 100,
             "alignment": "center",
             "onMouseUp": "sun1.opacity = (sun1.opacity / 100) * 90;"
@@ -122,7 +121,7 @@ let view (model:Model) dispatch =
           [ h2 [] [str "Literal JSON"]
             par "Window Title" model.ParsedLiteralJson.widget.window.title
             par "Image Source" model.ParsedLiteralJson.widget.image.src
-            par "Text Size" (sprintf "%.2f" model.ParsedLiteralJson.widget.text.foo)
+            par "Text Size" (sprintf "%.2f" model.ParsedLiteralJson.widget.text.size.[0].width)
             textarea [OnChange (fun ev -> LiteralJsonUpdated ev.Value |> dispatch)
                       Style [Width "600px"; Height "600px"]
                       Value model.LiteralJson] []

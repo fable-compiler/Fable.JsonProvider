@@ -1,3 +1,7 @@
+### 1.0.1
+
+* Support for Arrays of Custom types @pd29
+
 ### 1.0.0
 
 * Support file paths @Titaye
