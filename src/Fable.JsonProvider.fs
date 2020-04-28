@@ -58,9 +58,11 @@ module JsonProvider =
     and makeMember ns (name, json) =
         let t = makeType (firstToUpper name) json
         let m = Property(name, t, false, getterCode name)
-        match t with
-        | Custom t -> [ChildType t; m]
-        | _ -> [m]
+        let rec makeMember' = function
+            | Custom t' -> [ChildType t'; m]
+            | Array t' -> makeMember' t'
+            | _ -> [m]
+        makeMember' t
 
     let parseJson asm ns typeName sample =
         let makeRootType withCons basicMembers =
