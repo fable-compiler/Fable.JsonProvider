@@ -1,19 +1,16 @@
 {
   "private": true,
   "scripts": {
-    "start": "dotnet build src && webpack-dev-server --config test/webpack.config.js",
-    "publish": "fable build.fsx --run publish"
+    "postinstall": "dotnet tool restore",
+    "start": "dotnet build src && dotnet fable watch test/src --run webpack serve --config test/webpack.config.js",
+    "publish": "dotnet fsi build.fsx publish"
   },
   "dependencies": {
-    "@babel/core": "^7.4.4",
-    "fable-compiler-js": "^1.0.5",
-    "fable-publish-utils": "^1.0.5",
-    "fable-compiler": "^2.3.8",
-    "fable-loader": "^2.1.7",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
-    "webpack": "^4.31.0",
-    "webpack-cli": "^3.3.2",
-    "webpack-dev-server": "^3.3.1"
+    "fable-publish-utils": "2.0.0",
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1",
+    "webpack": "^5.9.0",
+    "webpack-cli": "^4.2.0",
+    "webpack-dev-server": "^3.11.0"
   }
 }

@@ -1,12 +1,11 @@
 # Fable.JsonProvider
 
-Simple F# JSON Type Provider compatible with Fable. Requires fable-compiler **2.2.0** or higher.
+Simple F# JSON Type Provider compatible with Fable. Currently tested with Fable 3 RC 11.
 
 ## Testing
 
 ```shell
-npm install
-npm start
+dotnet fsi build.fsx start
 ```
 
 ## Usage
