@@ -19,6 +19,7 @@ type ErasedType =
     | Array of ErasedType
     | Option of ErasedType
     | Custom of System.Type
+    | Tuple of ErasedType list    
 
 let addMembers (t: ProvidedTypeDefinition) members =
     for memb in members do
@@ -45,6 +46,13 @@ let makeType = function
     | Array t -> (makeType t).MakeArrayType()
     | Option t -> typedefof<Option<obj>>.MakeGenericType(makeType t)
     | Custom t -> t
+    | Tuple ts ->
+        match ts with
+        | [], [_] -> failwith "Tuple with only one or none items"
+        | [t1; t2] -> typedefof<obj * obj>.MakeGenericType(makeType t1, makeType t2)
+        | [t1; t2; t3] -> typedefof<obj * obj * obj>.MakeGenericType(makeType t1, makeType t2, makeType t3)
+        | [t1; t2; t3; t4] -> typedefof<obj * obj * obj * obj>.MakeGenericType(makeType t1, makeType t2, makeType t3, makeType t4)
+        | _ -> failwith "TODO: Tuples of more than 4 items"    
 
 let makeCustomType(name: string, members: Member list): System.Type =
     let t = ProvidedTypeDefinition(name, baseType = Some typeof<obj>, hideObjectMethods = true, isErased = true)
