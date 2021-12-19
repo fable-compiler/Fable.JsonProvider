@@ -19,7 +19,7 @@ type ErasedType =
     | Array of ErasedType
     | Option of ErasedType
     | Custom of System.Type
-    | Tuple of ErasedType list    
+    | Tuple of ErasedType list
 
 let addMembers (t: ProvidedTypeDefinition) members =
     for memb in members do
@@ -31,10 +31,10 @@ let addMembers (t: ProvidedTypeDefinition) members =
                 upcast ProvidedProperty(name, makeType typ, isStatic = isStatic, getterCode = body)
             | Method(name, args, typ, isStatic, body) ->
                 let args = args |> List.map (fun (name, t) -> ProvidedParameter(name, makeType t))
-                upcast ProvidedMethod(name, args, makeType typ, isStatic = isStatic, invokeCode = body)  
+                upcast ProvidedMethod(name, args, makeType typ, isStatic = isStatic, invokeCode = body)
             | Constructor(args, body) ->
                 let args = args |> List.map (fun (name, t) -> ProvidedParameter(name, makeType t))
-                upcast ProvidedConstructor(args, invokeCode = body)  
+                upcast ProvidedConstructor(args, invokeCode = body)
         t.AddMember(memb)
 
 let makeType = function
@@ -48,11 +48,11 @@ let makeType = function
     | Custom t -> t
     | Tuple ts ->
         match ts with
-        | [], [_] -> failwith "Tuple with only one or none items"
+        | [] | [_] -> failwith "Tuple with only one or none items"
         | [t1; t2] -> typedefof<obj * obj>.MakeGenericType(makeType t1, makeType t2)
         | [t1; t2; t3] -> typedefof<obj * obj * obj>.MakeGenericType(makeType t1, makeType t2, makeType t3)
         | [t1; t2; t3; t4] -> typedefof<obj * obj * obj * obj>.MakeGenericType(makeType t1, makeType t2, makeType t3, makeType t4)
-        | _ -> failwith "TODO: Tuples of more than 4 items"    
+        | _ -> failwith "TODO: Tuples of more than 4 items"
 
 let makeCustomType(name: string, members: Member list): System.Type =
     let t = ProvidedTypeDefinition(name, baseType = Some typeof<obj>, hideObjectMethods = true, isErased = true)
