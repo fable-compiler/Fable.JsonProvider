@@ -121,7 +121,7 @@ let view (model:Model) dispatch =
           [ h2 [] [str "Literal JSON"]
             par "Window Title" model.ParsedLiteralJson.widget.window.title
             par "Image Source" model.ParsedLiteralJson.widget.image.src
-            par "Text Size" (sprintf "%.2f" model.ParsedLiteralJson.widget.text.size.[0].width)
+            par "Text Size" (sprintf "%d" model.ParsedLiteralJson.widget.text.size.[0].width)
             textarea [OnChange (fun ev -> LiteralJsonUpdated ev.Value |> dispatch)
                       Style [Width "600px"; Height "600px"]
                       Value model.LiteralJson] []

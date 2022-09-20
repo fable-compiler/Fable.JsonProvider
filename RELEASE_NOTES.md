@@ -1,3 +1,7 @@
+### 1.1.0
+
+* Use Newtonsoft.Json for parsing
+
 ### 1.0.1
 
 * Support for Arrays of Custom types @pd29

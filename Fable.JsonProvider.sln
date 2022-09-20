@@ -1,0 +1,53 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fable.JsonProvider", "src\Fable.JsonProvider.fsproj", "{515ECBCB-C97E-4999-AF17-24D33AB8D974}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{240D3D41-157E-486F-8320-A33AA796D7C5}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "App", "test\src\App.fsproj", "{527EFD78-5CF0-49E3-A547-0096280773D3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{515ECBCB-C97E-4999-AF17-24D33AB8D974}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{515ECBCB-C97E-4999-AF17-24D33AB8D974}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{515ECBCB-C97E-4999-AF17-24D33AB8D974}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{515ECBCB-C97E-4999-AF17-24D33AB8D974}.Debug|x64.Build.0 = Debug|Any CPU
+		{515ECBCB-C97E-4999-AF17-24D33AB8D974}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{515ECBCB-C97E-4999-AF17-24D33AB8D974}.Debug|x86.Build.0 = Debug|Any CPU
+		{515ECBCB-C97E-4999-AF17-24D33AB8D974}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{515ECBCB-C97E-4999-AF17-24D33AB8D974}.Release|Any CPU.Build.0 = Release|Any CPU
+		{515ECBCB-C97E-4999-AF17-24D33AB8D974}.Release|x64.ActiveCfg = Release|Any CPU
+		{515ECBCB-C97E-4999-AF17-24D33AB8D974}.Release|x64.Build.0 = Release|Any CPU
+		{515ECBCB-C97E-4999-AF17-24D33AB8D974}.Release|x86.ActiveCfg = Release|Any CPU
+		{515ECBCB-C97E-4999-AF17-24D33AB8D974}.Release|x86.Build.0 = Release|Any CPU
+		{527EFD78-5CF0-49E3-A547-0096280773D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{527EFD78-5CF0-49E3-A547-0096280773D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{527EFD78-5CF0-49E3-A547-0096280773D3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{527EFD78-5CF0-49E3-A547-0096280773D3}.Debug|x64.Build.0 = Debug|Any CPU
+		{527EFD78-5CF0-49E3-A547-0096280773D3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{527EFD78-5CF0-49E3-A547-0096280773D3}.Debug|x86.Build.0 = Debug|Any CPU
+		{527EFD78-5CF0-49E3-A547-0096280773D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{527EFD78-5CF0-49E3-A547-0096280773D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{527EFD78-5CF0-49E3-A547-0096280773D3}.Release|x64.ActiveCfg = Release|Any CPU
+		{527EFD78-5CF0-49E3-A547-0096280773D3}.Release|x64.Build.0 = Release|Any CPU
+		{527EFD78-5CF0-49E3-A547-0096280773D3}.Release|x86.ActiveCfg = Release|Any CPU
+		{527EFD78-5CF0-49E3-A547-0096280773D3}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{527EFD78-5CF0-49E3-A547-0096280773D3} = {240D3D41-157E-486F-8320-A33AA796D7C5}
+	EndGlobalSection
+EndGlobal
