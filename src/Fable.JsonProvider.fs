@@ -15,8 +15,6 @@ module JsonProvider =
     open FSharp.Quotations
     open FSharp.Core.CompilerServices
     open ProviderImplementation.ProvidedTypes
-    open System.Text.Json
-    open System.Text.Json.Nodes
 
     open ProviderDsl
     open Fable.Core
@@ -43,31 +41,23 @@ module JsonProvider =
     let getterCode name =
         fun (args: Expr list) -> <@@ getProp %%args.Head name @@>
 
-    let rec makeType typeName (json: JsonNode) =
+    let rec makeType typeName json =
         match json with
-        | :? JsonArray as items ->
-            match Seq.tryHead items with
-            | None -> Array Any
+        | JsonParser.Null -> Any
+        | JsonParser.Bool _ -> Bool
+        | JsonParser.Number _ -> Float
+        | JsonParser.String _ -> String
+        | JsonParser.Array items ->
+            match items with
+            | [] -> Array Any
             // TODO: Check if all items have same type
-            | Some item -> makeType typeName item |> Array
-        | :? JsonObject as o ->
-            let members = o |> Seq.collect (makeMember typeName) |> Seq.toList
+            | item::_ -> makeType typeName item |> Array
+        | JsonParser.Object members ->
+            let members = members |> List.collect (makeMember typeName)
             makeCustomType(typeName, members) |> Custom
-        | :? JsonValue as v ->
-            match v.TryGetValue<JsonElement>() with
-            | false, _ -> Any
-            | true, el ->
-                match el.ValueKind with
-                | JsonValueKind.True | JsonValueKind.False -> Bool
-                | JsonValueKind.Number -> Float
-                | JsonValueKind.String -> String
-                //| JTokenType.Null -> Any
-                | _ -> Any
-        | _ -> Any
 
-    and makeMember ns (prop: KeyValuePair<string, JsonNode>) =
-        let name = prop.Key
-        let t = makeType (firstToUpper name) prop.Value
+    and makeMember ns (name, json) =
+        let t = makeType (firstToUpper name) json
         let m = Property(name, t, false, getterCode name)
         let rec makeMember' = function
             | Custom t' -> [ChildType t'; m]
@@ -83,19 +73,15 @@ module JsonProvider =
                     yield Constructor(["json", String], fun args -> <@@ jsonParse %%args.Head @@>)
             ])
         try
-            match JsonNode.Parse sample with
-            | :? JsonObject as o ->
-                makeRootType true o |> Ok
-            | :? JsonArray as ar ->
-                match Seq.tryHead ar with
-                | None -> Error "Empty array"
-                | Some(:? JsonObject as o) ->
-                    let t = makeRootType false o
-                    let array = t.MakeArrayType() |> Custom
-                    [Method("ParseArray", ["json", String], array, true, fun args -> <@@ jsonParse %%args.Head @@>)]
-                    |> addMembers t
-                    Ok t
-                | _ -> Error "JSON array doesn't contain an object"
+            match JsonParser.parse sample with
+            | Some(JsonParser.Object members) ->
+                makeRootType true members |> Ok
+            | Some(JsonParser.Array((JsonParser.Object members)::_)) ->
+                let t = makeRootType false members
+                let array = t.MakeArrayType() |> Custom
+                [Method("ParseArray", ["json", String], array, true, fun args -> <@@ jsonParse %%args.Head @@>)]
+                |> addMembers t
+                Ok t
             | _ -> Error "Expecting a JSON object or an array containing an object"
         with e ->
             Error e.Message

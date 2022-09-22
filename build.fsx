@@ -11,8 +11,7 @@ let args =
 match args with
 | IgnoreCase "start"::_ ->
     run "npm install"
-    run "dotnet build src"
-    run "dotnet fable watch test/src --run webpack serve --config test/webpack.config.js"
+    run "npm start"
 | IgnoreCase "publish"::_ ->
     pushFableNuget "src/Fable.JsonProvider.fsproj" [] doNothing
 | _ -> ()

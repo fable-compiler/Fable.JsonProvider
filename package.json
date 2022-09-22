@@ -2,14 +2,15 @@
   "private": true,
   "scripts": {
     "postinstall": "dotnet tool restore",
-    "start": "dotnet build src && dotnet fable watch test/src --run webpack serve --config test/webpack.config.js",
+    "start": "dotnet build src && dotnet fable watch test -s -o dist --run vite",
     "publish": "dotnet fsi build.fsx publish"
   },
   "dependencies": {
-    "react": "^17.0.1",
-    "react-dom": "^17.0.1",
-    "webpack": "^5.9.0",
-    "webpack-cli": "^4.2.0",
-    "webpack-dev-server": "^4.11.1"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "vite": "^3.1.0",
+    "@vitejs/plugin-react": "^2.1.0"
   }
 }

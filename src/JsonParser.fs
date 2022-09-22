@@ -19,8 +19,8 @@ type Token =
 let (|C|_|) (s: string, i) =
   if i < s.Length then Some(s.[i], (s, i+1)) else None
 
-let numeric = set['0'..'9'] + set['+'; '-'; '.'; 'e'; 'E']
-let whitespace = set[','; ':'; '\u0009'; '\u000a'; '\u000d'; '\u0020']
+let numeric = set ['0'..'9'] + set ['+'; '-'; '.'; 'e'; 'E']
+let whitespace = set [','; ':'; '\u0009'; '\u000a'; '\u000d'; '\u0020']
 
 let (|Contains|_|) alphabet = function
   | C(c, it) when Set.contains c alphabet -> Some it
@@ -34,12 +34,29 @@ let rec (|LexNumber|_|) = function
   | Contains numeric (LexNumber it | it) -> Some it
   | _ -> None
 
-let rec (|LexString|) = function
-  | C('"', it)
-  | C('\\', C(('"' | '\\' | '/' | 'b' | 'n' | 'r' | 't'), LexString it))
-  | C('\\', C('u', C(_, C(_, C(_, C(_, LexString it))))))
-  | C(_, LexString it)
-  | it -> it
+// This can cause Stack Overflow for long strings
+// let rec (|LexString|) = function
+//   | C('"', it)
+//   | C('\\', C(('"' | '\\' | '/' | 'b' | 'n' | 'r' | 't'), LexString it))
+//   | C('\\', C('u', C(_, C(_, C(_, C(_, LexString it))))))
+//   | C(_, LexString it)
+//   | it -> it
+
+let  (|LexString|) (s: string, start: int) =
+  let mutable i = start
+  let mutable finished = false
+  while not finished do
+    match s, i with
+    | C('"', (_, i2)) ->
+      i <- i2
+      finished <- true
+    | C('\\', C(('"' | '\\' | '/' | 'b' | 'n' | 'r' | 't'), (_, i2)))
+    | C('\\', C('u', C(_, C(_, C(_, C(_, (_, i2)))))))
+    | C(_, (_, i2)) ->
+      i <- i2
+    | _ ->
+      finished <- true
+  s, i
 
 let rec (|Lex|_|) = function
   | Contains whitespace it -> (|Lex|_|) it
@@ -64,6 +81,7 @@ let rec (|ParseJSON|_|) = function
   | Lex(OBJECT Open, Star (|ParseMember|_|) (members, Lex(OBJECT Close, it))) ->
       Some(Object members, it)
   | _ -> None
+
 and (|ParseMember|_|) = function
   | Lex(LITERAL(String key), ParseJSON(value, it)) -> Some((key, value), it)
   | _ -> None
