@@ -54,12 +54,12 @@ let makeType = function
         | [t1; t2; t3; t4] -> typedefof<obj * obj * obj * obj>.MakeGenericType(makeType t1, makeType t2, makeType t3, makeType t4)
         | _ -> failwith "TODO: Tuples of more than 4 items"
 
-let makeCustomType(name: string, members: Member seq): System.Type =
+let makeCustomType(name: string, members: Member list): System.Type =
     let t = ProvidedTypeDefinition(name, baseType = Some typeof<obj>, hideObjectMethods = true, isErased = true)
     addMembers t members
     upcast t
 
-let makeRootType(assembly: Assembly, nameSpace: string, typeName: string, members: Member seq) =
+let makeRootType(assembly: Assembly, nameSpace: string, typeName: string, members: Member list) =
     let root = ProvidedTypeDefinition(assembly, nameSpace, typeName, baseType = Some typeof<obj>, hideObjectMethods = true, isErased = true)
     addMembers root members
     root

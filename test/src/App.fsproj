@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="App.fs" />
@@ -10,6 +10,6 @@
     <PackageReference Include="Fable.Elmish.React" Version="3.0.1" />
     <PackageReference Include="Fable.SimpleHttp" Version="3.0.0" />
     <!-- <PackageReference Include="Fable.JsonProvider" Version="1.0.0" /> -->
-    <Reference Include="../../src/bin/Debug/netstandard2.0/Fable.JsonProvider.dll" />
+    <Reference Include="../../src/bin/Debug/net6.0/Fable.JsonProvider.dll" />
   </ItemGroup>
 </Project>
