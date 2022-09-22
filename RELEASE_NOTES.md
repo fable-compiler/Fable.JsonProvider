@@ -1,3 +1,8 @@
+### 1.1.1
+
+* Back to Jon Harrop's JsonParser, see #28
+* Prevent Stack Overflow with long strings
+
 ### 1.1.0
 
 * Use Newtonsoft.Json for parsing
